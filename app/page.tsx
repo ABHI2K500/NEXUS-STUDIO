@@ -32,30 +32,42 @@ import VideoPlayer from "@/components/video-player"
 import ThemeToggle from "@/components/theme-toggle"
 import NewsletterForm from "@/components/newsletter-form"
 import Chat from '@/components/Chat'
+import { useVideoUpdate } from "@/components/video-update-provider"
+import DebugVideo from "@/components/debug-video"
 
-// Add this function to fetch the featured video
+// Update the getFeaturedVideo function to use absolute URL and no caching
 async function getFeaturedVideo() {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || ''}/api/featured-video`, { 
-      cache: 'no-store' 
-    })
+    // Use absolute URL with origin to ensure it works in all environments
+    const origin = typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL || '';
+    const response = await fetch(`${origin}/api/video`, { 
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    });
     
     if (!response.ok) {
+      console.error("Error fetching featured video:", response.statusText);
       return {
         url: "https://www.youtube.com/watch?v=bJ5ClftUcBI",
         title: "Live Tournament Stream",
         isLive: true
-      }
+      };
     }
     
-    return await response.json()
+    const data = await response.json();
+    console.log("Fetched video data:", data);
+    return data;
   } catch (error) {
-    console.error("Error fetching featured video:", error)
+    console.error("Error fetching featured video:", error);
     return {
       url: "https://www.youtube.com/watch?v=bJ5ClftUcBI",
       title: "Live Tournament Stream",
       isLive: true
-    }
+    };
   }
 }
 
@@ -70,6 +82,8 @@ export default function Home() {
     title: "Live Tournament Stream",
     isLive: true
   })
+  const { showVideoUpdateNotification } = useVideoUpdate()
+  const [lastVideoUrl, setLastVideoUrl] = useState("")
 
   // Parallax effect
   const y1 = useTransform(scrollY, [0, 1000], [0, 300])
@@ -88,14 +102,35 @@ export default function Home() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
 
   useEffect(() => {
-    // Fetch featured video
+    // Fetch featured video with a refresh interval
     const loadFeaturedVideo = async () => {
-      const videoData = await getFeaturedVideo()
-      setFeaturedVideo(videoData)
-    }
+      try {
+        const videoData = await getFeaturedVideo();
+        console.log("Setting featured video:", videoData);
+        
+        // Check if the video URL has changed
+        if (lastVideoUrl && lastVideoUrl !== videoData.url) {
+          // Show notification only if this isn't the first load
+          showVideoUpdateNotification(videoData.url, videoData.title, videoData.isLive);
+        }
+        
+        // Update state
+        setFeaturedVideo(videoData);
+        setLastVideoUrl(videoData.url);
+      } catch (err) {
+        console.error("Error loading featured video:", err);
+      }
+    };
     
-    loadFeaturedVideo()
+    // Load immediately
+    loadFeaturedVideo();
     
+    // Then refresh every minute to catch updates
+    const refreshInterval = setInterval(loadFeaturedVideo, 60 * 1000);
+    
+    // Cleanup interval on unmount
+    return () => clearInterval(refreshInterval);
+
     // Animate stats when in view
     const targetStats = {
       projects: 250,
@@ -120,9 +155,7 @@ export default function Home() {
         return newStats
       })
     }, 30)
-
-    return () => clearInterval(interval)
-  }, [])
+  }, [lastVideoUrl, showVideoUpdateNotification]);
 
   // Animation variants
   const fadeIn = {
@@ -561,6 +594,9 @@ export default function Home() {
           </Button>
         )}
       </div>
+
+      {/* Debug Video Component */}
+      <DebugVideo />
     </div>
   )
 }

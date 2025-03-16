@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight, Trophy, Users, Calendar, DollarSign, MessageSquare } from "lucide-react"
@@ -21,9 +21,87 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
+import VideoPlayer from "@/components/video-player"
+import { useVideoUpdate } from "@/components/video-update-provider"
+import DebugVideo from "@/components/debug-video"
+
+// Update the getFeaturedVideo function to use absolute URL and no caching
+async function getFeaturedVideo() {
+  try {
+    // Use absolute URL with origin to ensure it works in all environments
+    const origin = typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL || '';
+    const response = await fetch(`${origin}/api/video`, { 
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    });
+    
+    if (!response.ok) {
+      console.error("Error fetching featured video:", response.statusText);
+      return {
+        url: "https://www.youtube.com/watch?v=bJ5ClftUcBI",
+        title: "Live Tournament Stream",
+        isLive: true
+      };
+    }
+    
+    const data = await response.json();
+    console.log("Fetched video data for esports page:", data);
+    return data;
+  } catch (error) {
+    console.error("Error fetching featured video:", error);
+    return {
+      url: "https://www.youtube.com/watch?v=bJ5ClftUcBI",
+      title: "Live Tournament Stream",
+      isLive: true
+    };
+  }
+}
 
 export default function EsportsPage() {
   const [showRegistrationSuccess, setShowRegistrationSuccess] = useState(false)
+  const [featuredVideo, setFeaturedVideo] = useState({
+    url: "https://www.youtube.com/watch?v=bJ5ClftUcBI",
+    title: "Live Tournament Stream",
+    isLive: true
+  })
+  const { showVideoUpdateNotification } = useVideoUpdate()
+  const [lastVideoUrl, setLastVideoUrl] = useState("")
+
+  useEffect(() => {
+    // Fetch featured video with a refresh interval
+    const loadFeaturedVideo = async () => {
+      try {
+        const videoData = await getFeaturedVideo();
+        console.log("Setting featured video for esports page:", videoData);
+        
+        // Check if the video URL has changed
+        if (lastVideoUrl && lastVideoUrl !== videoData.url) {
+          // Show notification only if this isn't the first load
+          showVideoUpdateNotification(videoData.url, videoData.title, videoData.isLive);
+        }
+        
+        // Update state
+        setFeaturedVideo(videoData);
+        setLastVideoUrl(videoData.url);
+      } catch (err) {
+        console.error("Error loading featured video:", err);
+      }
+    };
+    
+    // Load immediately
+    loadFeaturedVideo();
+    
+    // Then refresh every minute to catch updates
+    const refreshInterval = setInterval(loadFeaturedVideo, 60 * 1000);
+    
+    // Cleanup interval on unmount
+    return () => clearInterval(refreshInterval);
+  }, [lastVideoUrl, showVideoUpdateNotification]);
 
   const tournaments = [
     {
@@ -162,6 +240,29 @@ export default function EsportsPage() {
             <Button asChild size="lg">
               <a href="#tournaments">Browse Tournaments</a>
             </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Live Stream Section - Add this section */}
+      <section className="py-16 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <Badge variant="outline" className="mb-4 px-3 py-1 text-sm font-medium border-primary/30 bg-primary/5">
+              Live Now
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 gradient-text px-6 py-4">Featured Tournament Stream</h2>
+            <p className="text-muted-foreground">
+              Watch the latest tournament action live and follow your favorite players.
+            </p>
+          </div>
+          <div className="max-w-4xl mx-auto">
+            <VideoPlayer
+              src={featuredVideo.url}
+              poster="/game.jpg"
+              title={featuredVideo.title}
+              isLive={featuredVideo.isLive}
+            />
           </div>
         </div>
       </section>
@@ -551,6 +652,9 @@ export default function EsportsPage() {
           </div>
         </div>
       </section>
+
+      {/* Debug Video Component */}
+      <DebugVideo />
     </div>
   )
 }

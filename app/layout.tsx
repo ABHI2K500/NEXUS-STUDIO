@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 import { LanguageProvider } from "@/components/language-provider"
+import { VideoUpdateProvider } from "@/components/video-update-provider"
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -41,12 +42,14 @@ export default function RootLayout({
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <LanguageProvider>
-            <div className="page-background" />
-            <div className="flex flex-col min-h-screen">
-              <Header />
-              <main className="flex-grow">{children}</main>
-              <Footer />
-            </div>
+            <VideoUpdateProvider>
+              <div className="page-background" />
+              <div className="flex flex-col min-h-screen">
+                <Header />
+                <main className="flex-grow">{children}</main>
+                <Footer />
+              </div>
+            </VideoUpdateProvider>
           </LanguageProvider>
         </ThemeProvider>
       </body>

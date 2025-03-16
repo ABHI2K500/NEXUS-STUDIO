@@ -30,6 +30,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { useVideoUpdate } from "@/components/video-update-provider"
 
 type EmailSubscriber = {
   id: string
@@ -63,6 +64,7 @@ export default function AdminDashboard() {
   const [selectedSubmission, setSelectedSubmission] = useState<ContactSubmission | null>(null)
   const [user, setUser] = useState<any>(null)
   const router = useRouter()
+  const { showVideoUpdateNotification } = useVideoUpdate()
   
   // Add state for featured video
   const [featuredVideo, setFeaturedVideo] = useState<FeaturedVideo>({
@@ -281,16 +283,25 @@ export default function AdminDashboard() {
   // Add function to fetch featured video
   const fetchFeaturedVideo = async () => {
     try {
-      const response = await fetch("/api/featured-video")
-      const data = await response.json()
+      const response = await fetch("/api/video", {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
+      const data = await response.json();
       
       if (response.ok) {
-        setFeaturedVideo(data)
+        console.log("Fetched video data:", data);
+        setFeaturedVideo(data);
       } else {
-        console.error("Error fetching featured video:", data.error)
+        console.error("Error fetching featured video:", data.error);
       }
     } catch (error) {
-      console.error("Error fetching featured video:", error)
+      console.error("Error fetching featured video:", error);
     }
   }
   
@@ -304,17 +315,20 @@ export default function AdminDashboard() {
   // Add function to update featured video
   const updateFeaturedVideo = async () => {
     try {
-      setUpdatingVideo(true)
+      setUpdatingVideo(true);
       
-      const response = await fetch("/api/featured-video", {
+      const response = await fetch("/api/video", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         },
         body: JSON.stringify(featuredVideo),
-      })
+      });
       
-      const data = await response.json()
+      const data = await response.json();
       
       if (response.ok) {
         // Extract YouTube video ID for preview
@@ -340,6 +354,9 @@ export default function AdminDashboard() {
             icon: <CheckCircle className="h-5 w-5 text-green-500" />
           }
         );
+        
+        // Trigger the global notification that will appear on all pages
+        showVideoUpdateNotification(featuredVideo.url, featuredVideo.title, featuredVideo.isLive);
         
         // Add a custom dialog to show the update was successful
         const dialog = document.createElement('dialog');
