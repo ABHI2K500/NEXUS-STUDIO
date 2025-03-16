@@ -29,7 +29,21 @@ export default function VideoPlayer({
   const [volume, setVolume] = useState(1)
   const [showControls, setShowControls] = useState(true)
 
+  // Check if the source is a YouTube URL
+  const isYouTube = src.includes('youtube.com') || src.includes('youtu.be')
+  
+  // Extract YouTube video ID
+  const getYouTubeID = (url: string) => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  }
+  
+  const youtubeID = isYouTube ? getYouTubeID(src) : null;
+
   useEffect(() => {
+    if (isYouTube) return; // Skip for YouTube videos
+    
     let hideTimeout: NodeJS.Timeout
 
     const handleMouseMove = () => {
@@ -45,9 +59,11 @@ export default function VideoPlayer({
       container?.removeEventListener("mousemove", handleMouseMove)
       clearTimeout(hideTimeout)
     }
-  }, [])
+  }, [isYouTube])
 
   const togglePlay = () => {
+    if (isYouTube) return; // YouTube has its own controls
+    
     if (videoRef.current) {
       if (isPlaying) {
         videoRef.current.pause()
@@ -59,6 +75,8 @@ export default function VideoPlayer({
   }
 
   const toggleMute = () => {
+    if (isYouTube) return; // YouTube has its own controls
+    
     if (videoRef.current) {
       videoRef.current.muted = !isMuted
       setIsMuted(!isMuted)
@@ -66,6 +84,8 @@ export default function VideoPlayer({
   }
 
   const toggleFullscreen = () => {
+    if (isYouTube) return; // YouTube has its own fullscreen
+    
     const container = videoRef.current?.parentElement
     if (!container) return
 
@@ -82,6 +102,8 @@ export default function VideoPlayer({
   }
 
   const handleProgress = () => {
+    if (isYouTube) return; // YouTube has its own progress
+    
     if (videoRef.current) {
       const progress =
         (videoRef.current.currentTime / videoRef.current.duration) * 100
@@ -90,6 +112,8 @@ export default function VideoPlayer({
   }
 
   const handleVolumeChange = (value: number) => {
+    if (isYouTube) return; // YouTube has its own volume control
+    
     if (videoRef.current) {
       videoRef.current.volume = value
       setVolume(value)
@@ -98,6 +122,8 @@ export default function VideoPlayer({
   }
 
   const handleSeek = (value: number) => {
+    if (isYouTube) return; // YouTube has its own seeking
+    
     if (videoRef.current) {
       const time = (value / 100) * videoRef.current.duration
       videoRef.current.currentTime = time
@@ -105,6 +131,33 @@ export default function VideoPlayer({
     }
   }
 
+  // Render YouTube embed if it's a YouTube URL
+  if (isYouTube && youtubeID) {
+    return (
+      <div className={cn("relative aspect-video rounded-lg overflow-hidden", className)}>
+        <iframe
+          width="100%"
+          height="100%"
+          src={`https://www.youtube.com/embed/${youtubeID}?autoplay=1&rel=0${isLive ? '&live=1' : ''}`}
+          title={title || "YouTube video player"}
+          frameBorder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        ></iframe>
+        
+        {isLive && title && (
+          <div className="absolute top-4 left-4 z-10">
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-600 text-white mr-2">
+              LIVE
+            </span>
+            <span className="text-white font-medium drop-shadow-md">{title}</span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Regular video player for non-YouTube sources
   return (
     <div
       className={cn(
