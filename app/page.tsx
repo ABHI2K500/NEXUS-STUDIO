@@ -98,6 +98,10 @@ export default function Home() {
     countries: 0,
   })
 
+  // Add ref for stats section
+  const statsRef = useRef<HTMLDivElement>(null);
+  const [statsVisible, setStatsVisible] = useState(false);
+
   // Mouse position state for hover effects
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
 
@@ -130,6 +134,42 @@ export default function Home() {
     
     // Cleanup interval on unmount
     return () => clearInterval(refreshInterval);
+  }, [lastVideoUrl, showVideoUpdateNotification]);
+
+  // Separate useEffect for stats counter
+  useEffect(() => {
+    // Create intersection observer for stats section
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setStatsVisible(true);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (statsRef.current) {
+      observer.observe(statsRef.current);
+    }
+
+    return () => {
+      if (statsRef.current) {
+        observer.unobserve(statsRef.current);
+      }
+    };
+  }, []);
+
+  // Stats counter effect - only runs when stats are visible
+  useEffect(() => {
+    if (!statsVisible) return;
+
+    // Force reset stats to ensure animation starts properly
+    setStats({
+      projects: 0,
+      clients: 0,
+      awards: 0,
+      countries: 0,
+    });
 
     // Animate stats when in view
     const targetStats = {
@@ -137,25 +177,35 @@ export default function Home() {
       clients: 120,
       awards: 35,
       countries: 18,
-    }
+    };
 
+    // Use a faster approach with fewer steps
+    const steps = 20; // Complete in 20 steps
+    const duration = 1500; // 1.5 seconds total
+    const stepTime = duration / steps;
+    
+    let step = 0;
     const interval = setInterval(() => {
-      setStats((prev) => {
-        const newStats = { ...prev }
-        let completed = true
+      step++;
+      const progress = step / steps;
+      
+      setStats({
+        projects: Math.round(targetStats.projects * progress),
+        clients: Math.round(targetStats.clients * progress),
+        awards: Math.round(targetStats.awards * progress),
+        countries: Math.round(targetStats.countries * progress),
+      });
+      
+      if (step >= steps) {
+        clearInterval(interval);
+        // Ensure final values are exact
+        setStats(targetStats);
+      }
+    }, stepTime);
 
-        Object.keys(targetStats).forEach((key) => {
-          if (prev[key as keyof typeof prev] < targetStats[key as keyof typeof targetStats]) {
-            newStats[key as keyof typeof newStats] = prev[key as keyof typeof prev] + 1
-            completed = false
-          }
-        })
-
-        if (completed) clearInterval(interval)
-        return newStats
-      })
-    }, 30)
-  }, [lastVideoUrl, showVideoUpdateNotification]);
+    // Make sure to clean up the interval
+    return () => clearInterval(interval);
+  }, [statsVisible]);
 
   // Animation variants
   const fadeIn = {
@@ -213,6 +263,7 @@ export default function Home() {
             </motion.div>
 
             <motion.div
+              ref={statsRef}
               className="mt-32 grid grid-cols-2 md:grid-cols-4 gap-8"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -240,7 +291,7 @@ export default function Home() {
 
         {/* Floating elements with updated theme colors */}
         <motion.div
-          className="absolute top-1/4 left-10 w-20 h-20 rounded-full backdrop-blur-xl bg-primary/20"
+          className="absolute top-1/4 left-10 w-20 h-20 rounded-full backdrop-blur-xl bg-primary/20 -z-10"
           style={{ y: y1 }}
           animate={{
             scale: [1, 1.2, 1],
@@ -253,7 +304,7 @@ export default function Home() {
           }}
         />
         <motion.div
-          className="absolute bottom-1/4 right-10 w-32 h-32 rounded-full backdrop-blur-xl bg-accent/20"
+          className="absolute bottom-1/4 right-10 w-32 h-32 rounded-full backdrop-blur-xl bg-accent/20 -z-10"
           style={{ y: y2 }}
           animate={{
             scale: [1, 1.3, 1],
@@ -556,8 +607,8 @@ export default function Home() {
             </motion.div>
 
             {/* Decorative elements */}
-            <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full bg-primary/10 blur-3xl"></div>
-            <div className="absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-accent/10 blur-3xl"></div>
+            <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full bg-primary/10 blur-3xl -z-10"></div>
+            <div className="absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-accent/10 blur-3xl -z-10"></div>
           </div>
         </div>
       </section>

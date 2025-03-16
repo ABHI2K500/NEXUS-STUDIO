@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
-import { Mail, Send, MessageSquare, LogOut, Calendar, User, AtSign, FileText, Video, CheckCircle } from "lucide-react"
+import { Mail, Send, MessageSquare, LogOut, Calendar, User, AtSign, FileText, Video, CheckCircle, Trophy, Plus, Trash2, Edit, Save } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -53,6 +53,22 @@ type FeaturedVideo = {
   isLive: boolean
 }
 
+// Add new type for leaderboard player
+type LeaderboardPlayer = {
+  id: string
+  name: string
+  rank: number
+  score: number
+  avatar: string
+  team: string
+  stats: {
+    wins: number
+    losses: number
+    winRate: number
+    avgScore: number
+  }
+}
+
 export default function AdminDashboard() {
   const [subscribers, setSubscribers] = useState<EmailSubscriber[]>([])
   const [contactSubmissions, setContactSubmissions] = useState<ContactSubmission[]>([])
@@ -74,12 +90,19 @@ export default function AdminDashboard() {
   })
   const [updatingVideo, setUpdatingVideo] = useState(false)
 
+  // Add state for leaderboard
+  const [leaderboardPlayers, setLeaderboardPlayers] = useState<LeaderboardPlayer[]>([])
+  const [editingPlayer, setEditingPlayer] = useState<LeaderboardPlayer | null>(null)
+  const [isEditingLeaderboard, setIsEditingLeaderboard] = useState(false)
+  const [updatingLeaderboard, setUpdatingLeaderboard] = useState(false)
+
   useEffect(() => {
     const init = async () => {
       try {
         await checkAuth()
         await fetchData()
         await fetchFeaturedVideo()
+        await fetchLeaderboard()
       } catch (err) {
         console.error("Dashboard initialization error:", err)
         const errorMessage = err instanceof Error ? err.message : "Failed to initialize dashboard"
@@ -455,6 +478,132 @@ export default function AdminDashboard() {
     }
   }
 
+  // Add function to fetch leaderboard data
+  const fetchLeaderboard = async () => {
+    try {
+      const response = await fetch("/api/leaderboard", {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch leaderboard data");
+      }
+      
+      const data = await response.json();
+      setLeaderboardPlayers(data);
+    } catch (error) {
+      console.error("Error fetching leaderboard data:", error);
+      toast.error("Failed to fetch leaderboard data");
+    }
+  }
+
+  // Add function to update leaderboard
+  const updateLeaderboard = async () => {
+    try {
+      setUpdatingLeaderboard(true);
+      
+      const response = await fetch("/api/leaderboard", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        body: JSON.stringify(leaderboardPlayers),
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to update leaderboard");
+      }
+      
+      const data = await response.json();
+      setLeaderboardPlayers(data.data);
+      setIsEditingLeaderboard(false);
+      setEditingPlayer(null);
+      
+      toast.success("Leaderboard updated successfully");
+    } catch (error) {
+      console.error("Error updating leaderboard:", error);
+      toast.error("Failed to update leaderboard");
+    } finally {
+      setUpdatingLeaderboard(false);
+    }
+  }
+
+  // Add function to add a new player
+  const addNewPlayer = () => {
+    const newPlayer: LeaderboardPlayer = {
+      id: Date.now().toString(),
+      name: "New Player",
+      rank: leaderboardPlayers.length + 1,
+      score: 1000,
+      avatar: "/avatars/default.png",
+      team: "Team New",
+      stats: {
+        wins: 0,
+        losses: 0,
+        winRate: 0,
+        avgScore: 0
+      }
+    };
+    
+    setLeaderboardPlayers([...leaderboardPlayers, newPlayer]);
+    setEditingPlayer(newPlayer);
+    setIsEditingLeaderboard(true);
+  }
+
+  // Add function to remove a player
+  const removePlayer = (id: string) => {
+    setLeaderboardPlayers(leaderboardPlayers.filter(player => player.id !== id));
+    if (editingPlayer?.id === id) {
+      setEditingPlayer(null);
+    }
+  }
+
+  // Add function to update player data
+  const updatePlayerData = (field: string, value: string | number | boolean) => {
+    if (!editingPlayer) return;
+    
+    if (field.startsWith('stats.')) {
+      const statField = field.split('.')[1];
+      setEditingPlayer({
+        ...editingPlayer,
+        stats: {
+          ...editingPlayer.stats,
+          [statField]: value
+        }
+      });
+    } else {
+      setEditingPlayer({
+        ...editingPlayer,
+        [field]: value
+      });
+    }
+  }
+
+  // Add function to save player edits
+  const savePlayerEdits = () => {
+    if (!editingPlayer) return;
+    
+    setLeaderboardPlayers(leaderboardPlayers.map(player => 
+      player.id === editingPlayer.id ? editingPlayer : player
+    ));
+    
+    setEditingPlayer(null);
+  }
+
+  // Add function to calculate win rate
+  const calculateWinRate = (wins: number, losses: number) => {
+    if (wins + losses === 0) return 0;
+    return parseFloat(((wins / (wins + losses)) * 100).toFixed(1));
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -498,6 +647,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="featured-video">
               <Video className="h-4 w-4 mr-2" />
               Featured Video
+            </TabsTrigger>
+            <TabsTrigger value="leaderboard">
+              <Trophy className="h-4 w-4 mr-2" />
+              Esports Leaderboard
             </TabsTrigger>
           </TabsList>
 
@@ -752,6 +905,213 @@ export default function AdminDashboard() {
               <CardFooter>
                 <Button onClick={updateFeaturedVideo} disabled={updatingVideo}>
                   {updatingVideo ? "Updating..." : "Update Featured Video"}
+                </Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="leaderboard">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Manage Esports Leaderboard</CardTitle>
+                    <CardDescription>
+                      Update player information and scores for the esports leaderboard
+                    </CardDescription>
+                  </div>
+                  <Button onClick={addNewPlayer} disabled={updatingLeaderboard}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Player
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {leaderboardPlayers.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">No players in the leaderboard</p>
+                      <Button onClick={addNewPlayer} className="mt-4">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add First Player
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Player List */}
+                        <div className="space-y-2">
+                          <h3 className="text-lg font-medium mb-2">Players</h3>
+                          {leaderboardPlayers
+                            .sort((a, b) => b.score - a.score)
+                            .map((player, index) => (
+                              <div 
+                                key={player.id}
+                                className={`flex items-center justify-between p-3 rounded-lg border ${
+                                  editingPlayer?.id === player.id ? 'border-primary' : 'border-border'
+                                } hover:bg-accent/5 transition-colors cursor-pointer`}
+                                onClick={() => setEditingPlayer(player)}
+                              >
+                                <div className="flex items-center space-x-3">
+                                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                    {index + 1}
+                                  </div>
+                                  <div>
+                                    <p className="font-medium">{player.name}</p>
+                                    <p className="text-sm text-muted-foreground">{player.team}</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <div className="text-right mr-2">
+                                    <p className="font-bold">{player.score}</p>
+                                    <p className="text-xs text-muted-foreground">points</p>
+                                  </div>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      removePlayer(player.id);
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                        
+                        {/* Player Edit Form */}
+                        <div>
+                          {editingPlayer ? (
+                            <div className="border rounded-lg p-4 space-y-4">
+                              <h3 className="text-lg font-medium mb-2">Edit Player</h3>
+                              
+                              <div className="space-y-2">
+                                <Label htmlFor="player-name">Player Name</Label>
+                                <Input
+                                  id="player-name"
+                                  value={editingPlayer.name}
+                                  onChange={(e) => updatePlayerData('name', e.target.value)}
+                                />
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <Label htmlFor="player-team">Team</Label>
+                                <Input
+                                  id="player-team"
+                                  value={editingPlayer.team}
+                                  onChange={(e) => updatePlayerData('team', e.target.value)}
+                                />
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <Label htmlFor="player-score">Score</Label>
+                                <Input
+                                  id="player-score"
+                                  type="number"
+                                  value={editingPlayer.score}
+                                  onChange={(e) => updatePlayerData('score', parseInt(e.target.value) || 0)}
+                                />
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <Label htmlFor="player-avatar">Avatar URL</Label>
+                                <Input
+                                  id="player-avatar"
+                                  value={editingPlayer.avatar}
+                                  onChange={(e) => updatePlayerData('avatar', e.target.value)}
+                                />
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="player-wins">Wins</Label>
+                                  <Input
+                                    id="player-wins"
+                                    type="number"
+                                    value={editingPlayer.stats.wins}
+                                    onChange={(e) => {
+                                      const wins = parseInt(e.target.value) || 0;
+                                      updatePlayerData('stats.wins', wins);
+                                      updatePlayerData('stats.winRate', calculateWinRate(wins, editingPlayer.stats.losses));
+                                    }}
+                                  />
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <Label htmlFor="player-losses">Losses</Label>
+                                  <Input
+                                    id="player-losses"
+                                    type="number"
+                                    value={editingPlayer.stats.losses}
+                                    onChange={(e) => {
+                                      const losses = parseInt(e.target.value) || 0;
+                                      updatePlayerData('stats.losses', losses);
+                                      updatePlayerData('stats.winRate', calculateWinRate(editingPlayer.stats.wins, losses));
+                                    }}
+                                  />
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <Label htmlFor="player-winrate">Win Rate (%)</Label>
+                                  <Input
+                                    id="player-winrate"
+                                    type="number"
+                                    value={editingPlayer.stats.winRate}
+                                    onChange={(e) => updatePlayerData('stats.winRate', parseFloat(e.target.value) || 0)}
+                                    step="0.1"
+                                  />
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <Label htmlFor="player-avgscore">Avg Score</Label>
+                                  <Input
+                                    id="player-avgscore"
+                                    type="number"
+                                    value={editingPlayer.stats.avgScore}
+                                    onChange={(e) => updatePlayerData('stats.avgScore', parseInt(e.target.value) || 0)}
+                                  />
+                                </div>
+                              </div>
+                              
+                              <div className="flex justify-end space-x-2 pt-2">
+                                <Button 
+                                  variant="outline" 
+                                  onClick={() => setEditingPlayer(null)}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button onClick={savePlayerEdits}>
+                                  <Save className="h-4 w-4 mr-2" />
+                                  Save Changes
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="border rounded-lg p-4 flex items-center justify-center h-full">
+                              <div className="text-center">
+                                <p className="text-muted-foreground mb-4">Select a player to edit their details</p>
+                                <Button variant="outline" onClick={addNewPlayer}>
+                                  <Plus className="h-4 w-4 mr-2" />
+                                  Add New Player
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={updateLeaderboard} 
+                  disabled={updatingLeaderboard}
+                  className="w-full"
+                >
+                  {updatingLeaderboard ? "Updating..." : "Update Leaderboard"}
                 </Button>
               </CardFooter>
             </Card>
