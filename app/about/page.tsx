@@ -148,7 +148,7 @@ export default function AboutPage() {
               {
                 name: "Ananthakrishnan K V",
                 role: "Creative Director",
-                bio: "Ananthan brings creative concepts to life with her innovative approach to design and storytelling.",
+                bio: "Ananthan brings creative concepts to life with his innovative approach to design and storytelling.",
                 src: "/pfp.jpg",
               },
               {
