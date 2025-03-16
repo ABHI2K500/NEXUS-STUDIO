@@ -29,35 +29,45 @@ export default function EsportsLeaderboard() {
   const [players, setPlayers] = useState<Player[]>([])
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
   const [showProfile, setShowProfile] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Simulated live data - replace with actual API call
-    const mockPlayers: Player[] = [
-      {
-        id: "1",
-        name: "ProGamer123",
-        rank: 1,
-        score: 2500,
-        avatar: "/avatars/player1.png",
-        team: "Team Alpha",
-        stats: { wins: 150, losses: 30, winRate: 83.3, avgScore: 2345 },
-      },
-      // Add more mock players...
-    ]
-    setPlayers(mockPlayers)
-
-    // Simulate live updates
-    const interval = setInterval(() => {
-      setPlayers((current) =>
-        current.map((player) => ({
-          ...player,
-          score: player.score + Math.floor(Math.random() * 10),
-        }))
-      )
-    }, 5000)
-
-    return () => clearInterval(interval)
-  }, [])
+    // Fetch leaderboard data from API
+    const fetchLeaderboardData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/leaderboard', {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch leaderboard data');
+        }
+        
+        const data = await response.json();
+        setPlayers(data);
+      } catch (error) {
+        console.error('Error fetching leaderboard data:', error);
+        // Fallback to empty array if fetch fails
+        setPlayers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    // Initial fetch
+    fetchLeaderboardData();
+    
+    // Set up polling for updates every 30 seconds
+    const interval = setInterval(fetchLeaderboardData, 30000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -79,40 +89,50 @@ export default function EsportsLeaderboard() {
           <h2 className="text-2xl font-bold gradient-text px-6 py-4">Live Leaderboard</h2>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            {players
-              .sort((a, b) => b.score - a.score)
-              .map((player, index) => (
-                <div
-                  key={player.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-card hover:bg-accent/5 transition-colors"
-                  onClick={() => {
-                    setSelectedPlayer(player)
-                    setShowProfile(true)
-                  }}
-                >
-                  <div className="flex items-center space-x-4">
-                    <span className="flex items-center justify-center w-8">
-                      {getRankIcon(index + 1)}
-                    </span>
-                    <Avatar>
-                      <AvatarImage src={player.avatar} />
-                      <AvatarFallback>{player.name[0]}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium">{player.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {player.team}
-                      </p>
+          {loading ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : players.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No leaderboard data available</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {players
+                .sort((a, b) => b.score - a.score)
+                .map((player, index) => (
+                  <div
+                    key={player.id}
+                    className="flex items-center justify-between p-3 rounded-lg bg-card hover:bg-accent/5 transition-colors cursor-pointer"
+                    onClick={() => {
+                      setSelectedPlayer(player)
+                      setShowProfile(true)
+                    }}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <span className="flex items-center justify-center w-8">
+                        {getRankIcon(index + 1)}
+                      </span>
+                      <Avatar>
+                        <AvatarImage src={player.avatar} />
+                        <AvatarFallback>{player.name[0]}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium">{player.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {player.team}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold">{player.score}</p>
+                      <p className="text-sm text-muted-foreground">points</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold">{player.score}</p>
-                    <p className="text-sm text-muted-foreground">points</p>
-                  </div>
-                </div>
-              ))}
-          </div>
+                ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
