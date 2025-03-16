@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
-import { Mail, Send, MessageSquare, LogOut, Calendar, User, AtSign, FileText } from "lucide-react"
+import { Mail, Send, MessageSquare, LogOut, Calendar, User, AtSign, FileText, Video, CheckCircle } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import styles from "./styles.module.css"
 import {
   Table,
   TableBody,
@@ -43,6 +45,13 @@ type ContactSubmission = {
   created_at: string
 }
 
+// Add new type for featured video
+type FeaturedVideo = {
+  url: string
+  title: string
+  isLive: boolean
+}
+
 export default function AdminDashboard() {
   const [subscribers, setSubscribers] = useState<EmailSubscriber[]>([])
   const [contactSubmissions, setContactSubmissions] = useState<ContactSubmission[]>([])
@@ -52,13 +61,23 @@ export default function AdminDashboard() {
   const [newsletterSubject, setNewsletterSubject] = useState("")
   const [newsletterContent, setNewsletterContent] = useState("")
   const [selectedSubmission, setSelectedSubmission] = useState<ContactSubmission | null>(null)
+  const [user, setUser] = useState<any>(null)
   const router = useRouter()
   
+  // Add state for featured video
+  const [featuredVideo, setFeaturedVideo] = useState<FeaturedVideo>({
+    url: "https://www.youtube.com/watch?v=bJ5ClftUcBI",
+    title: "Live Tournament Stream",
+    isLive: true
+  })
+  const [updatingVideo, setUpdatingVideo] = useState(false)
+
   useEffect(() => {
     const init = async () => {
       try {
         await checkAuth()
         await fetchData()
+        await fetchFeaturedVideo()
       } catch (err) {
         console.error("Dashboard initialization error:", err)
         const errorMessage = err instanceof Error ? err.message : "Failed to initialize dashboard"
@@ -113,6 +132,8 @@ export default function AdminDashboard() {
       }
       
       console.log("Admin access confirmed")
+
+      setUser(session.user)
     } catch (err) {
       console.error("Auth check error:", err)
       throw err
@@ -257,6 +278,166 @@ export default function AdminDashboard() {
     }).format(date)
   }
 
+  // Add function to fetch featured video
+  const fetchFeaturedVideo = async () => {
+    try {
+      const response = await fetch("/api/featured-video")
+      const data = await response.json()
+      
+      if (response.ok) {
+        setFeaturedVideo(data)
+      } else {
+        console.error("Error fetching featured video:", data.error)
+      }
+    } catch (error) {
+      console.error("Error fetching featured video:", error)
+    }
+  }
+  
+  // Add function to extract YouTube video ID
+  const getYouTubeID = (url: string) => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  }
+
+  // Add function to update featured video
+  const updateFeaturedVideo = async () => {
+    try {
+      setUpdatingVideo(true)
+      
+      const response = await fetch("/api/featured-video", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(featuredVideo),
+      })
+      
+      const data = await response.json()
+      
+      if (response.ok) {
+        // Extract YouTube video ID for preview
+        const youtubeID = getYouTubeID(featuredVideo.url);
+        
+        // Show a more prominent success message
+        toast.success(
+          <div className="flex flex-col space-y-2">
+            <div className="font-medium">Video Updated Successfully!</div>
+            <div className="text-sm text-muted-foreground">
+              <div><strong>Title:</strong> {featuredVideo.title}</div>
+              <div><strong>URL:</strong> {featuredVideo.url}</div>
+              <div><strong>Live Status:</strong> {featuredVideo.isLive ? "Live" : "Not Live"}</div>
+            </div>
+            <div className="text-xs mt-1">
+              Changes will be visible on the homepage immediately.
+            </div>
+          </div>,
+          {
+            duration: 5000,
+            className: styles["video-update-toast"],
+            position: "top-center",
+            icon: <CheckCircle className="h-5 w-5 text-green-500" />
+          }
+        );
+        
+        // Add a custom dialog to show the update was successful
+        const dialog = document.createElement('dialog');
+        dialog.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4';
+        
+        // Create HTML for the dialog
+        const videoPreviewHtml = youtubeID ? 
+          `<div class="aspect-video mb-4 rounded-md overflow-hidden">
+            <iframe 
+              width="100%" 
+              height="100%" 
+              src="https://www.youtube.com/embed/${youtubeID}?autoplay=0" 
+              title="YouTube video player" 
+              frameborder="0" 
+              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+              allowfullscreen
+            ></iframe>
+          </div>` : '';
+        
+        dialog.innerHTML = `
+          <div class="${styles['fade-in']} ${styles['zoom-in']} bg-background rounded-lg shadow-lg max-w-md w-full p-6">
+            <div class="flex items-center space-x-2 mb-4">
+              <div class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-600">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+              <h3 class="text-lg font-medium">Video Updated Successfully!</h3>
+            </div>
+            
+            ${videoPreviewHtml}
+            
+            <div class="space-y-3 mb-4">
+              <div class="p-3 bg-muted rounded-md">
+                <div class="mb-1"><span class="font-medium">Title:</span> ${featuredVideo.title}</div>
+                <div class="mb-1 break-all"><span class="font-medium">URL:</span> ${featuredVideo.url}</div>
+                <div><span class="font-medium">Status:</span> ${featuredVideo.isLive ? 
+                  '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">LIVE</span>' : 
+                  '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">Not Live</span>'
+                }</div>
+              </div>
+              <p class="text-sm text-muted-foreground">
+                The featured video has been updated and will be visible on the homepage immediately.
+              </p>
+            </div>
+            <div class="flex justify-end">
+              <button class="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium" id="closeDialog">
+                Close
+              </button>
+            </div>
+          </div>
+        `;
+        
+        document.body.appendChild(dialog);
+        dialog.showModal();
+        
+        // Add event listener to close button
+        const closeButton = dialog.querySelector('#closeDialog');
+        if (closeButton) {
+          closeButton.addEventListener('click', () => {
+            const modalContent = dialog.querySelector('div');
+            if (modalContent) {
+              modalContent.classList.remove(styles['fade-in'], styles['zoom-in']);
+              modalContent.classList.add(styles['fade-out'], styles['zoom-out']);
+            }
+            setTimeout(() => {
+              dialog.close();
+              document.body.removeChild(dialog);
+            }, 300);
+          });
+        }
+        
+        // Auto close after 8 seconds
+        setTimeout(() => {
+          if (document.body.contains(dialog)) {
+            const modalContent = dialog.querySelector('div');
+            if (modalContent) {
+              modalContent.classList.remove(styles['fade-in'], styles['zoom-in']);
+              modalContent.classList.add(styles['fade-out'], styles['zoom-out']);
+            }
+            setTimeout(() => {
+              if (document.body.contains(dialog)) {
+                dialog.close();
+                document.body.removeChild(dialog);
+              }
+            }, 300);
+          }
+        }, 8000);
+      } else {
+        toast.error(`Error updating featured video: ${data.error}`)
+      }
+    } catch (error: any) {
+      toast.error(`Error updating featured video: ${error.message}`)
+    } finally {
+      setUpdatingVideo(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -266,202 +447,300 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <Button variant="ghost" onClick={handleSignOut} size="icon" title="Sign Out">
-          <LogOut className="h-5 w-5" />
+    <div className="container mx-auto py-10">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          {user && <p className="text-muted-foreground">Logged in as {user.email}</p>}
+        </div>
+        <Button variant="outline" onClick={handleSignOut}>
+          <LogOut className="h-4 w-4 mr-2" />
+          Sign Out
         </Button>
       </div>
 
-      <Tabs defaultValue="subscribers">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="subscribers">
-            <Mail className="h-4 w-4 mr-2" />
-            Email Subscribers
-          </TabsTrigger>
-          <TabsTrigger value="contact">
-            <MessageSquare className="h-4 w-4 mr-2" />
-            Contact Submissions
-          </TabsTrigger>
-        </TabsList>
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <p>Loading...</p>
+        </div>
+      ) : (
+        <Tabs defaultValue="subscribers">
+          <TabsList className="mb-8">
+            <TabsTrigger value="subscribers">
+              <Mail className="h-4 w-4 mr-2" />
+              Subscribers
+            </TabsTrigger>
+            <TabsTrigger value="contact">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Contact Submissions
+            </TabsTrigger>
+            <TabsTrigger value="newsletter">
+              <Send className="h-4 w-4 mr-2" />
+              Send Newsletter
+            </TabsTrigger>
+            <TabsTrigger value="featured-video">
+              <Video className="h-4 w-4 mr-2" />
+              Featured Video
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="subscribers" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Email Subscribers</CardTitle>
-              <CardDescription>
-                You have {subscribers.length} email subscribers
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {subscribers.length === 0 ? (
+          <TabsContent value="subscribers" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Email Subscribers</CardTitle>
+                <CardDescription>
+                  You have {subscribers.length} email subscribers
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {subscribers.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-4">
+                      No subscribers yet
+                    </p>
+                  ) : (
+                    <Table>
+                      <TableCaption>List of email subscribers</TableCaption>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Subscription Date</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {subscribers.map((subscriber) => (
+                          <TableRow key={subscriber.id}>
+                            <TableCell className="font-medium">{subscriber.email}</TableCell>
+                            <TableCell>{formatDate(subscriber.created_at)}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="contact">
+            <Card>
+              <CardHeader>
+                <CardTitle>Contact Form Submissions</CardTitle>
+                <CardDescription>
+                  You have {contactSubmissions.length} contact form submissions
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {contactSubmissions.length === 0 ? (
                   <p className="text-muted-foreground text-center py-4">
-                    No subscribers yet
+                    No contact form submissions yet
                   </p>
                 ) : (
                   <Table>
-                    <TableCaption>List of email subscribers</TableCaption>
+                    <TableCaption>List of contact form submissions</TableCaption>
                     <TableHeader>
                       <TableRow>
+                        <TableHead>Name</TableHead>
                         <TableHead>Email</TableHead>
-                        <TableHead>Subscription Date</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Action</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {subscribers.map((subscriber) => (
-                        <TableRow key={subscriber.id}>
-                          <TableCell className="font-medium">{subscriber.email}</TableCell>
-                          <TableCell>{formatDate(subscriber.created_at)}</TableCell>
+                      {contactSubmissions.map((submission) => (
+                        <TableRow key={submission.id}>
+                          <TableCell className="font-medium">{submission.name}</TableCell>
+                          <TableCell>{submission.email}</TableCell>
+                          <TableCell>{formatDate(submission.created_at)}</TableCell>
+                          <TableCell>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => setSelectedSubmission(submission)}
+                                >
+                                  View Details
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="sm:max-w-md">
+                                <DialogHeader>
+                                  <DialogTitle>Contact Submission Details</DialogTitle>
+                                  <DialogDescription>
+                                    Submitted on {selectedSubmission && formatDate(selectedSubmission.created_at)}
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4 py-4">
+                                  <div className="flex items-center gap-4">
+                                    <User className="h-5 w-5 text-muted-foreground" />
+                                    <div>
+                                      <p className="text-sm font-medium">Name</p>
+                                      <p>{selectedSubmission?.name}</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-4">
+                                    <AtSign className="h-5 w-5 text-muted-foreground" />
+                                    <div>
+                                      <p className="text-sm font-medium">Email</p>
+                                      <p>{selectedSubmission?.email}</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-start gap-4">
+                                    <FileText className="h-5 w-5 text-muted-foreground mt-1" />
+                                    <div>
+                                      <p className="text-sm font-medium">Message</p>
+                                      <p className="whitespace-pre-wrap">{selectedSubmission?.message}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex justify-end">
+                                  <Button variant="outline" size="sm" asChild>
+                                    <a href={`mailto:${selectedSubmission?.email}`}>
+                                      Reply via Email
+                                    </a>
+                                  </Button>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
                 )}
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Send Newsletter</CardTitle>
-              <CardDescription>
-                Compose and send a newsletter to all subscribers
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="subject">Subject</Label>
-                  <Input
-                    id="subject"
-                    placeholder="Newsletter Subject"
-                    value={newsletterSubject}
-                    onChange={(e) => setNewsletterSubject(e.target.value)}
-                    disabled={sendingNewsletter}
-                  />
+          <TabsContent value="newsletter">
+            <Card>
+              <CardHeader>
+                <CardTitle>Send Newsletter</CardTitle>
+                <CardDescription>
+                  Compose and send a newsletter to all subscribers
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="subject">Subject</Label>
+                    <Input
+                      id="subject"
+                      placeholder="Newsletter Subject"
+                      value={newsletterSubject}
+                      onChange={(e) => setNewsletterSubject(e.target.value)}
+                      disabled={sendingNewsletter}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="content">Content</Label>
+                    <Textarea
+                      id="content"
+                      placeholder="Write your newsletter content here..."
+                      rows={10}
+                      value={newsletterContent}
+                      onChange={(e) => setNewsletterContent(e.target.value)}
+                      disabled={sendingNewsletter}
+                      className="min-h-[200px]"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      You can use HTML tags for formatting.
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="content">Content</Label>
-                  <Textarea
-                    id="content"
-                    placeholder="Write your newsletter content here..."
-                    rows={10}
-                    value={newsletterContent}
-                    onChange={(e) => setNewsletterContent(e.target.value)}
-                    disabled={sendingNewsletter}
-                    className="min-h-[200px]"
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    You can use HTML tags for formatting.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                onClick={sendNewsletter} 
-                disabled={sendingNewsletter || subscribers.length === 0}
-                className="w-full"
-              >
-                <Send className="h-4 w-4 mr-2" />
-                {sendingNewsletter ? "Sending..." : "Send Newsletter"}
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={sendNewsletter} 
+                  disabled={sendingNewsletter || subscribers.length === 0}
+                  className="w-full"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  {sendingNewsletter ? "Sending..." : "Send Newsletter"}
+                </Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="contact">
-          <Card>
-            <CardHeader>
-              <CardTitle>Contact Form Submissions</CardTitle>
-              <CardDescription>
-                You have {contactSubmissions.length} contact form submissions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {contactSubmissions.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">
-                  No contact form submissions yet
-                </p>
-              ) : (
-                <Table>
-                  <TableCaption>List of contact form submissions</TableCaption>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {contactSubmissions.map((submission) => (
-                      <TableRow key={submission.id}>
-                        <TableCell className="font-medium">{submission.name}</TableCell>
-                        <TableCell>{submission.email}</TableCell>
-                        <TableCell>{formatDate(submission.created_at)}</TableCell>
-                        <TableCell>
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => setSelectedSubmission(submission)}
-                              >
-                                View Details
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-md">
-                              <DialogHeader>
-                                <DialogTitle>Contact Submission Details</DialogTitle>
-                                <DialogDescription>
-                                  Submitted on {selectedSubmission && formatDate(selectedSubmission.created_at)}
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="space-y-4 py-4">
-                                <div className="flex items-center gap-4">
-                                  <User className="h-5 w-5 text-muted-foreground" />
-                                  <div>
-                                    <p className="text-sm font-medium">Name</p>
-                                    <p>{selectedSubmission?.name}</p>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                  <AtSign className="h-5 w-5 text-muted-foreground" />
-                                  <div>
-                                    <p className="text-sm font-medium">Email</p>
-                                    <p>{selectedSubmission?.email}</p>
-                                  </div>
-                                </div>
-                                <div className="flex items-start gap-4">
-                                  <FileText className="h-5 w-5 text-muted-foreground mt-1" />
-                                  <div>
-                                    <p className="text-sm font-medium">Message</p>
-                                    <p className="whitespace-pre-wrap">{selectedSubmission?.message}</p>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="flex justify-end">
-                                <Button variant="outline" size="sm" asChild>
-                                  <a href={`mailto:${selectedSubmission?.email}`}>
-                                    Reply via Email
-                                  </a>
-                                </Button>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="featured-video">
+            <Card>
+              <CardHeader>
+                <CardTitle>Manage Featured Video</CardTitle>
+                <CardDescription>
+                  Update the featured video displayed on the homepage
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="video-url">Video URL</Label>
+                    <Input
+                      id="video-url"
+                      placeholder="https://www.youtube.com/watch?v=..."
+                      value={featuredVideo.url}
+                      onChange={(e) => setFeaturedVideo({ ...featuredVideo, url: e.target.value })}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Enter a YouTube video URL (e.g., https://www.youtube.com/watch?v=bJ5ClftUcBI)
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="video-title">Video Title</Label>
+                    <Input
+                      id="video-title"
+                      placeholder="Live Tournament Stream"
+                      value={featuredVideo.title}
+                      onChange={(e) => setFeaturedVideo({ ...featuredVideo, title: e.target.value })}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="live-status"
+                      checked={featuredVideo.isLive}
+                      onCheckedChange={(checked) => setFeaturedVideo({ ...featuredVideo, isLive: checked })}
+                    />
+                    <Label htmlFor="live-status">Mark as Live Stream</Label>
+                  </div>
+                  
+                  {/* Video Preview */}
+                  {featuredVideo.url && (
+                    <div className="mt-6 space-y-2">
+                      <Label>Video Preview</Label>
+                      <div className="aspect-video rounded-md overflow-hidden border">
+                        {getYouTubeID(featuredVideo.url) ? (
+                          <iframe 
+                            width="100%" 
+                            height="100%" 
+                            src={`https://www.youtube.com/embed/${getYouTubeID(featuredVideo.url)}?autoplay=0`}
+                            title="YouTube video preview" 
+                            frameBorder="0" 
+                            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowFullScreen
+                          ></iframe>
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-muted">
+                            <p className="text-muted-foreground">Invalid YouTube URL</p>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        This is how the video will appear on the homepage
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button onClick={updateFeaturedVideo} disabled={updatingVideo}>
+                  {updatingVideo ? "Updating..." : "Update Featured Video"}
+                </Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      )}
     </div>
   )
 } 

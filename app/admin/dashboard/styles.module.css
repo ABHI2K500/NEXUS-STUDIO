@@ -1,0 +1,76 @@
+/* Success popup animations */
+.animate-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.animate-out {
+  animation: fadeOut 0.3s ease forwards;
+}
+
+.fade-in {
+  opacity: 0;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.fade-out {
+  opacity: 1;
+  animation: fadeOut 0.3s ease forwards;
+}
+
+.zoom-in {
+  transform: scale(0.95);
+  animation: zoomIn 0.3s ease forwards;
+}
+
+.zoom-out {
+  transform: scale(1);
+  animation: zoomOut 0.3s ease forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    transform: scale(0.95);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes zoomOut {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(0.95);
+  }
+}
+
+/* Toast customization */
+.video-update-toast {
+  background-color: var(--background);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  max-width: 400px;
+  width: 100%;
+} 

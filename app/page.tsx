@@ -33,12 +33,43 @@ import ThemeToggle from "@/components/theme-toggle"
 import NewsletterForm from "@/components/newsletter-form"
 import Chat from '@/components/Chat'
 
+// Add this function to fetch the featured video
+async function getFeaturedVideo() {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || ''}/api/featured-video`, { 
+      cache: 'no-store' 
+    })
+    
+    if (!response.ok) {
+      return {
+        url: "https://www.youtube.com/watch?v=bJ5ClftUcBI",
+        title: "Live Tournament Stream",
+        isLive: true
+      }
+    }
+    
+    return await response.json()
+  } catch (error) {
+    console.error("Error fetching featured video:", error)
+    return {
+      url: "https://www.youtube.com/watch?v=bJ5ClftUcBI",
+      title: "Live Tournament Stream",
+      isLive: true
+    }
+  }
+}
+
 export default function Home() {
   const { t } = useLanguage()
   const { resolvedTheme } = useTheme()
   const { scrollY } = useScroll()
   const ref = useRef(null)
   const [isChatOpen, setIsChatOpen] = useState(false)
+  const [featuredVideo, setFeaturedVideo] = useState({
+    url: "https://www.youtube.com/watch?v=bJ5ClftUcBI",
+    title: "Live Tournament Stream",
+    isLive: true
+  })
 
   // Parallax effect
   const y1 = useTransform(scrollY, [0, 1000], [0, 300])
@@ -57,6 +88,14 @@ export default function Home() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
 
   useEffect(() => {
+    // Fetch featured video
+    const loadFeaturedVideo = async () => {
+      const videoData = await getFeaturedVideo()
+      setFeaturedVideo(videoData)
+    }
+    
+    loadFeaturedVideo()
+    
     // Animate stats when in view
     const targetStats = {
       projects: 250,
@@ -328,10 +367,10 @@ export default function Home() {
           </div>
           <div className="max-w-4xl mx-auto">
             <VideoPlayer
-              src="https://www.youtube.com/watch?v=bJ5ClftUcBI"
+              src={featuredVideo.url}
               poster="/game.jpg"
-              title="Live Tournament Stream"
-              isLive={true}
+              title={featuredVideo.title}
+              isLive={featuredVideo.isLive}
             />
           </div>
         </div>
