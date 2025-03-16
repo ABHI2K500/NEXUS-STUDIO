@@ -1,0 +1,72 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "default",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "tailwind.config.ts",
+    "css": "app/globals.css",
+    "baseColor": "neutral",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  },
+  "iconLibrary": "lucide",
+  "useEffect": {
+    "applyTheme": {
+      "document.body.classList.add(`theme-${newTheme}`)": true
+    }
+  }
+}
+
+const GROQ_API_KEY = process.env.NEXT_PUBLIC_GROQ_API_KEY;
+
+async function getChatResponse(message: string) {
+  const response = await fetch('https://api.groq.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${GROQ_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: "mixtral-8x7b-32768",
+      messages: [{ role: "user", content: message }]
+    })
+  });
+  return response.json();
+}
+
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        'dark-bg': '#1a1b26',
+        'dark-primary': '#7aa2f7',
+        'dark-secondary': '#bb9af7',
+        'dark-text': '#c0caf5',
+        'dark-accent': '#f7768e'
+      }
+    }
+  }
+}
+
+// tests/features.test.ts
+import { test } from '@playwright/test';
+
+test('theme persistence', async ({ page }) => {
+  await page.goto('/');
+  await page.click('[aria-label="Toggle theme"]');
+  // Add theme verification logic
+});
+
+test('chatbot functionality', async ({ page }) => {
+  await page.goto('/');
+  await page.click('[data-testid="chatbot-trigger"]');
+  // Add chatbot interaction tests
+});
