@@ -328,8 +328,8 @@ export default function Home() {
           </div>
           <div className="max-w-4xl mx-auto">
             <VideoPlayer
-              src="https://example.com/stream.m3u8"
-              poster="/placeholder.svg"
+              src="https://www.youtube.com/watch?v=bJ5ClftUcBI"
+              poster="/game.jpg"
               title="Live Tournament Stream"
               isLive={true}
             />
