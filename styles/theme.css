@@ -1,0 +1,158 @@
+/* Theme variables */
+:root {
+  /* Light theme colors */
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  
+  --primary: 222 92% 20%;
+  --primary-foreground: 210 40% 98%;
+  
+  --secondary: 213 67% 52%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  
+  --accent: 217 100% 56%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 217.9 10.6% 44.9%;
+  
+  --surface: 0 0% 97.3%;
+  
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  
+  --ring: 221.2 83.2% 53.3%;
+  
+  --radius: 0.5rem;
+}
+
+.dark {
+  /* Dark theme colors */
+  --background: 240 10% 4%;    /* Almost black: #0a0a0c */
+  --foreground: 210 40% 98%;   /* Light text: #e2e8f0 */
+  
+  --primary: 217 100% 50%;     /* Neon blue: #0066ff */
+  --primary-foreground: 210 40% 98%;
+  
+  --secondary: 220 70% 20%;    /* Navy blue: #0d2340 */
+  --secondary-foreground: 210 40% 98%;
+  
+  --accent: 195 100% 50%;      /* Bright cyan: #00bfff */
+  --accent-foreground: 210 40% 98%;
+  
+  --muted: 220 20% 20%;       /* Dark navy: #1a1f2e */
+  --muted-foreground: 215 20.2% 65.1%;
+  
+  --surface: 240 10% 8%;      /* Darker surface: #14141a */
+  
+  --card: 240 10% 8%;
+  --card-foreground: 210 40% 98%;
+  
+  --border: 220 20% 20%;
+  --input: 220 20% 20%;
+  
+  --popover: 240 10% 8%;
+  --popover-foreground: 210 40% 98%;
+  
+  --ring: 217 100% 50%;
+}
+
+/* Neon glow effects */
+.neon-glow {
+  box-shadow: 0 0 5px rgba(0, 102, 255, 0.5),
+              0 0 10px rgba(0, 102, 255, 0.3),
+              0 0 15px rgba(0, 102, 255, 0.2);
+}
+
+.dark .neon-glow {
+  box-shadow: 0 0 5px rgba(0, 102, 255, 0.7),
+              0 0 10px rgba(0, 102, 255, 0.5),
+              0 0 15px rgba(0, 102, 255, 0.3),
+              0 0 20px rgba(0, 191, 255, 0.2);
+}
+
+/* Gradient text */
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
+}
+
+.dark .gradient-text {
+  @apply bg-gradient-to-r from-[#0066ff] to-[#00bfff];
+}
+
+/* Edge lighting effect */
+.edge-light {
+  position: relative;
+  overflow: hidden;
+}
+
+.edge-light::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 102, 255, 0.2),
+    transparent
+  );
+  transition: 0.5s;
+  animation: edge-light 3s infinite;
+}
+
+@keyframes edge-light {
+  0% {
+    left: -100%;
+  }
+  50% {
+    left: 100%;
+  }
+  100% {
+    left: -100%;
+  }
+}
+
+/* Oval navigation */
+.oval-nav {
+  border-radius: 50px;
+  padding: 0.5rem 1.5rem;
+  background: linear-gradient(
+    to right,
+    hsl(var(--background)),
+    hsl(var(--surface))
+  );
+  border: 1px solid hsl(var(--border));
+}
+
+.dark .oval-nav {
+  background: linear-gradient(
+    to right,
+    hsl(var(--secondary)),
+    hsl(var(--background))
+  );
+  border: 1px solid hsl(var(--primary));
+}
+
+/* Center align text */
+.text-center-align {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Continuous theme transitions */
+* {
+  transition: background-color 0.3s ease,
+              color 0.3s ease,
+              border-color 0.3s ease,
+              box-shadow 0.3s ease;
+} 
