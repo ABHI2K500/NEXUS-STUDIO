@@ -1,0 +1,829 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Base colors */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    /* Light theme colors */
+    --primary: 222 92% 20%;   /* light-primary: #0a2463 */
+    --primary-foreground: 210 40% 98%;
+    
+    --secondary: 213 67% 52%; /* light-secondary: #3e92cc */
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    
+    --accent: 217 100% 56%;   /* light-accent: #2176ff */
+    --accent-foreground: 222.2 47.4% 11.2%;
+    
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 217.9 10.6% 44.9%; /* light-muted: #64748b */
+    
+    --surface: 0 0% 97.3%;    /* light-surface: #f8f9fa */
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    
+    --ring: 221.2 83.2% 53.3%;
+
+    --radius: 0.5rem;
+
+    /* Add missing RGB variables for glow effects */
+    --primary-rgb: 10, 36, 99; /* light-primary in RGB */
+    --accent-rgb: 33, 118, 255; /* light-accent in RGB */
+  }
+  
+  .dark {
+    /* Dark theme colors with classic color scheme */
+    --background: 220 20% 10%;    /* Deep charcoal: #151a24 */
+    --foreground: 210 40% 98%;    /* Clean white: #e2e8f0 */
+    
+    --primary: 215 100% 50%;      /* Classic blue: #0066cc */
+    --primary-foreground: 210 40% 98%;
+    
+    --secondary: 215 50% 23%;     /* Dark blue-gray: #2c3e50 */
+    --secondary-foreground: 210 40% 98%;
+    
+    --accent: 210 100% 40%;       /* Rich blue: #0052a3 */
+    --accent-foreground: 210 40% 98%;
+    
+    --muted: 215 25% 15%;         /* Muted dark: #1e2837 */
+    --muted-foreground: 215 20% 65%;
+    
+    --surface: 220 20% 12%;       /* Slightly lighter surface: #181d28 */
+    
+    --card: 220 20% 12%;
+    --card-foreground: 210 40% 98%;
+    
+    --border: 215 25% 20%;
+    --input: 215 25% 20%;
+    
+    --popover: 220 20% 12%;
+    --popover-foreground: 210 40% 98%;
+    
+    --ring: 215 100% 50%;
+
+    --primary-rgb: 0, 102, 204;    /* Classic blue in RGB */
+    --accent-rgb: 0, 82, 163;      /* Rich blue in RGB */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground transition-colors duration-300;
+    min-height: 100vh;
+    position: relative;
+  }
+  
+  /* Add global gradient background to all pages */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(-45deg, rgba(0, 102, 204, 0.3), rgba(44, 62, 80, 0.3), rgba(0, 82, 163, 0.3));
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+  }
+  
+  .dark body::before {
+    background: linear-gradient(-45deg, rgba(0, 102, 204, 0.3), rgba(44, 62, 80, 0.3), rgba(0, 82, 163, 0.3));
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+  }
+
+  /* Add circuit pattern overlay */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.03;
+    background-image: 
+      linear-gradient(to right, rgba(var(--primary-rgb), 0.1) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(var(--primary-rgb), 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+    mask-image: radial-gradient(circle at center, black, transparent 80%);
+  }
+
+  /* Add data grid pattern */
+  .page-background {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-image: 
+      linear-gradient(to right, rgba(var(--primary-rgb), 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(var(--primary-rgb), 0.05) 1px, transparent 1px);
+    background-size: 100px 100px;
+    opacity: 0.2;
+  }
+
+  .dark .page-background {
+    background-image: 
+      linear-gradient(to right, rgba(var(--accent-rgb), 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(var(--accent-rgb), 0.05) 1px, transparent 1px);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-primary/50;
+}
+
+/* Glass effect */
+.glass {
+  @apply bg-background/80 backdrop-blur-md border border-border/50;
+}
+
+.glass-card {
+  @apply bg-card/90 backdrop-blur-md border border-border/50;
+}
+
+/* Gradient text */
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
+}
+
+.dark .gradient-text {
+  @apply bg-gradient-to-r from-secondary to-accent;
+}
+
+/* Gradient borders */
+.gradient-border {
+  position: relative;
+  border-radius: var(--radius);
+}
+
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  padding: 1px;
+  background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent)));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Shimmer effect */
+.shimmer {
+  @apply relative overflow-hidden;
+}
+
+.shimmer::after {
+  @apply absolute inset-0;
+  content: "";
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  animation: shimmer 2s infinite linear;
+}
+
+/* Hover sidebar */
+.hover-sidebar {
+  @apply fixed left-0 top-0 h-screen w-16 bg-card z-40 transition-all duration-300 ease-in-out;
+}
+
+.hover-sidebar:hover,
+.hover-sidebar.expanded {
+  @apply w-64 shadow-xl;
+}
+
+.hover-sidebar-item {
+  @apply relative flex items-center h-12 w-full px-4 text-muted-foreground hover:text-foreground transition-all duration-200;
+}
+
+.hover-sidebar-item .icon {
+  @apply h-5 w-5 min-w-[20px];
+}
+
+.hover-sidebar-item .text {
+  @apply ml-4 whitespace-nowrap overflow-hidden opacity-0 transition-opacity duration-200;
+}
+
+.hover-sidebar:hover .hover-sidebar-item .text,
+.hover-sidebar.expanded .hover-sidebar-item .text {
+  @apply opacity-100;
+}
+
+.hover-sidebar-item.active {
+  @apply text-primary before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-primary;
+}
+
+/* Animated background */
+.animated-bg {
+  background: linear-gradient(-45deg, #0a2463, #3e92cc, #2176ff, #0a2463);
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite;
+}
+
+.dark .animated-bg {
+  background: linear-gradient(-45deg, #121212, #7b2cbf, #9d4edd, #121212);
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Floating elements */
+.floating {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+/* Page transitions */
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.page-transition-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-transition-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 300ms, transform 300ms;
+}
+
+/* Glow effects */
+.glow {
+  box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.5);
+}
+
+.dark .glow {
+  box-shadow: 0 0 20px rgba(var(--primary-rgb), 0.7);
+}
+
+.glow-text {
+  text-shadow: 0 0 10px rgba(var(--primary-rgb), 0.7);
+}
+
+/* Divider with text */
+.divider {
+  @apply flex items-center text-muted-foreground my-4;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  @apply flex-1 border-t border-border;
+}
+
+.divider::before {
+  @apply mr-3;
+}
+
+.divider::after {
+  @apply ml-3;
+}
+
+/* Animated dots for loading */
+.loading-dots::after {
+  content: ".";
+  animation: dots 1.5s steps(5, end) infinite;
+}
+
+@keyframes dots {
+  0%,
+  20% {
+    content: ".";
+  }
+  40% {
+    content: "..";
+  }
+  60% {
+    content: "...";
+  }
+  80%,
+  100% {
+    content: "";
+  }
+}
+
+/* Responsive utilities */
+.responsive-container {
+  @apply container mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* Utility classes */
+.text-balance {
+  text-wrap: balance;
+}
+
+.text-pretty {
+  text-wrap: pretty;
+}
+
+@layer utilities {
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+  }
+
+  .gradient-border {
+    @apply relative border border-primary/20 hover:border-primary/40 transition-colors duration-300;
+  }
+
+  .glass {
+    @apply bg-background/70 backdrop-blur-lg border border-primary/10;
+  }
+
+  .glass-card {
+    @apply bg-background/70 backdrop-blur-lg border border-primary/10 shadow-xl;
+  }
+}
+
+/* Additional animations and styles */
+.animate-gradient-background {
+  background: linear-gradient(
+    -45deg,
+    hsl(var(--primary) / 0.15),
+    hsl(var(--secondary) / 0.1),
+    hsl(var(--accent) / 0.15),
+    hsl(var(--background))
+  );
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite;
+}
+
+/* Add these new animations for blob effects */
+.animate-blob {
+  animation: blob-bounce 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+@keyframes blob-bounce {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+/* Enhanced hover effects */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.dark .hover-lift:hover {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+/* Text gradient animation */
+.animated-gradient-text {
+  background: linear-gradient(
+    to right,
+    hsl(var(--primary)),
+    hsl(var(--accent)),
+    hsl(var(--secondary)),
+    hsl(var(--primary))
+  );
+  background-size: 300% 300%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: moving-gradient 8s ease infinite;
+}
+
+@keyframes moving-gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Futuristic tech patterns */
+.circuit-pattern {
+  background-image: 
+    radial-gradient(circle at 25px 25px, rgba(255, 255, 255, 0.2) 2px, transparent 0),
+    linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px, 25px 25px, 25px 25px;
+}
+
+.dark .circuit-pattern {
+  background-image: 
+    radial-gradient(circle at 25px 25px, rgba(255, 255, 255, 0.15) 2px, transparent 0),
+    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+}
+
+/* Improved glass effect with subtle shimmer */
+.glass-morphism {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: glass-shimmer 3s infinite;
+}
+
+.dark .glass-morphism {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+@keyframes glass-shimmer {
+  0% {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  100% {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Neon glow effects */
+.neon-glow {
+  box-shadow: 0 0 5px rgba(var(--primary-rgb), 0.5),
+              0 0 10px rgba(var(--primary-rgb), 0.3),
+              0 0 15px rgba(var(--primary-rgb), 0.2);
+}
+
+.dark .neon-glow {
+  box-shadow: 0 0 5px rgba(var(--primary-rgb), 0.7),
+              0 0 10px rgba(var(--primary-rgb), 0.5),
+              0 0 15px rgba(var(--primary-rgb), 0.3),
+              0 0 20px rgba(var(--accent-rgb), 0.2);
+}
+
+/* Pulse animation */
+.pulse-slow {
+  animation: pulse 5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Add more futuristic interaction styles */
+.interactive-spotlight {
+  position: relative;
+  overflow: hidden;
+}
+
+.interactive-spotlight::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    circle at var(--x, 50%) var(--y, 50%),
+    rgba(255, 255, 255, 0.15) 0%,
+    transparent 50%
+  );
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.interactive-spotlight:hover::before {
+  opacity: 1;
+}
+
+/* Fix for the animated gradient background */
+.animate-gradient-background {
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite;
+}
+
+/* Add missing shimmer animation keyframes */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Add a futuristic data-grid pattern */
+.data-grid-pattern {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(var(--primary-rgb), 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(var(--primary-rgb), 0.05) 1px, transparent 1px);
+}
+
+.dark .data-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(var(--primary-rgb), 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(var(--primary-rgb), 0.1) 1px, transparent 1px);
+}
+
+/* Add hologram effect */
+.hologram {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(var(--primary-rgb), 0.2);
+}
+
+.hologram::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    45deg,
+    transparent 40%,
+    rgba(var(--primary-rgb), 0.2) 45%,
+    rgba(var(--primary-rgb), 0.4) 50%,
+    rgba(var(--primary-rgb), 0.2) 55%,
+    transparent 60%
+  );
+  background-size: 200% 200%;
+  animation: hologram-sweep 3s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes hologram-sweep {
+  0% {
+    background-position: -100% -100%;
+  }
+  100% {
+    background-position: 200% 200%;
+  }
+}
+
+/* Add cyber glow effect */
+.cyber-glow {
+  box-shadow: 
+    0 0 10px rgba(var(--primary-rgb), 0.4),
+    0 0 20px rgba(var(--primary-rgb), 0.2),
+    0 0 30px rgba(var(--primary-rgb), 0.1),
+    0 0 40px rgba(var(--primary-rgb), 0.05);
+  animation: cyber-pulse 4s infinite alternate;
+}
+
+@keyframes cyber-pulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 10px rgba(var(--primary-rgb), 0.4),
+      0 0 20px rgba(var(--primary-rgb), 0.2),
+      0 0 30px rgba(var(--primary-rgb), 0.1),
+      0 0 40px rgba(var(--primary-rgb), 0.05);
+  }
+  50% {
+    box-shadow: 
+      0 0 15px rgba(var(--primary-rgb), 0.5),
+      0 0 25px rgba(var(--primary-rgb), 0.3),
+      0 0 35px rgba(var(--primary-rgb), 0.15),
+      0 0 45px rgba(var(--primary-rgb), 0.075);
+  }
+}
+
+/* Add typing animation for text */
+.typing-text {
+  border-right: 2px solid hsl(var(--primary));
+  white-space: nowrap;
+  overflow: hidden;
+  animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+}
+
+@keyframes typing {
+  from { width: 0 }
+  to { width: 100% }
+}
+
+@keyframes blink-caret {
+  from, to { border-color: transparent }
+  50% { border-color: hsl(var(--primary)) }
+}
+
+/* Futuristic scan line effect */
+.scan-lines {
+  position: relative;
+  overflow: hidden;
+}
+
+.scan-lines::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(var(--primary-rgb), 0.03) 50%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+}
+
+/* Add oval-shaped navigation styles */
+.oval-nav {
+  border-radius: 50px;
+  padding: 0.5rem 1.5rem;
+  background: linear-gradient(
+    to right,
+    hsl(var(--background)),
+    hsl(var(--surface))
+  );
+  border: 1px solid hsl(var(--border));
+}
+
+.dark .oval-nav {
+  background: linear-gradient(
+    to right,
+    hsl(var(--secondary)),
+    hsl(var(--background))
+  );
+  border: 1px solid hsl(var(--primary));
+}
+
+/* Add edge lighting effect */
+.edge-light {
+  position: relative;
+  overflow: hidden;
+}
+
+.edge-light::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(var(--primary-rgb), 0.2),
+    transparent
+  );
+  transition: 0.5s;
+  animation: edge-light 3s infinite;
+}
+
+@keyframes edge-light {
+  0% {
+    left: -100%;
+  }
+  50% {
+    left: 100%;
+  }
+  100% {
+    left: -100%;
+  }
+}
+
+/* Add hover zoom and glint effect */
+.service-card {
+  transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.service-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(var(--primary-rgb), 0.1),
+    transparent
+  );
+  transform: rotate(45deg);
+  transition: transform 0.6s;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.service-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 30px -10px rgba(var(--primary-rgb), 0.3);
+}
+
+.service-card:hover::before {
+  animation: glint 1.5s;
+}
+
+@keyframes glint {
+  0% {
+    transform: translateX(-100%) rotate(45deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateX(100%) rotate(45deg);
+    opacity: 0;
+  }
+}
+
+.dark .service-card:hover {
+  box-shadow: 0 10px 30px -10px rgba(var(--primary-rgb), 0.5),
+              0 0 20px rgba(var(--accent-rgb), 0.3);
+}
+
+/* Add blue shade effect */
+.service-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(var(--primary-rgb), 0.15),
+    transparent 150px
+  );
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.service-card:hover::after {
+  opacity: 1;
+}
+
