@@ -97,7 +97,7 @@ export default function ContactPage() {
       <section className="relative py-20 md:py-28">
         <div className="absolute inset-0 z-0">
           <Image
-            src="/placeholder.svg?height=1080&width=1920&text=Contact%20Us"
+            src="/contactus.logo.jpg?height=1080&width=1920&text=Contact%20Us"
             alt="Contact Us"
             fill
             className="object-cover"

@@ -124,7 +124,7 @@ export default function JoinUsPage() {
       <section className="relative py-20 md:py-28">
         <div className="absolute inset-0 z-0">
           <Image
-            src="/placeholder.svg?height=1080&width=1920&text=Join%20Our%20Team"
+            src="/joinus.jpeg?height=1080&width=1920&text=Join%20Our%20Team"
             alt="Join Our Team"
             fill
             className="object-cover"
@@ -157,34 +157,34 @@ export default function JoinUsPage() {
               {
                 title: "Innovative Projects",
                 description: "Work on cutting-edge projects for diverse clients across various industries.",
-                image: "/placeholder.svg?height=400&width=400&text=Innovative%20Projects",
+                image: "/-product.jpg?height=400&width=400&text=Innovative%20Projects",
               },
               {
                 title: "Growth Opportunities",
                 description:
                   "Continuous learning and career advancement opportunities to help you reach your full potential.",
-                image: "/placeholder.svg?height=400&width=400&text=Growth%20Opportunities",
+                image: "/groth.jpg?height=400&width=400&text=Growth%20Opportunities",
               },
               {
                 title: "Collaborative Culture",
                 description:
                   "Join a team of passionate professionals who collaborate, support, and inspire each other.",
-                image: "/placeholder.svg?height=400&width=400&text=Collaborative%20Culture",
+                image: "/collaborative-culture.jpg?height=400&width=400&text=Collaborative%20Culture",
               },
               {
                 title: "Work-Life Balance",
                 description: "Flexible work arrangements and policies that promote a healthy work-life balance.",
-                image: "/placeholder.svg?height=400&width=400&text=Work-Life%20Balance",
+                image: "/worklife-balance.jpg?height=400&width=400&text=Work-Life%20Balance",
               },
               {
                 title: "Competitive Benefits",
                 description: "Comprehensive benefits package including health insurance, retirement plans, and more.",
-                image: "/placeholder.svg?height=400&width=400&text=Competitive%20Benefits",
+                image: "/Competitive-Benefits.jpeg?height=400&width=400&text=Competitive%20Benefits",
               },
               {
                 title: "Industry Recognition",
                 description: "Be part of an award-winning team recognized for excellence in the industry.",
-                image: "/placeholder.svg?height=400&width=400&text=Industry%20Recognition",
+                image: "/Industry-Recognition.jpeg?height=400&width=400&text=Industry%20Recognition",
               },
             ].map((benefit, index) => (
               <Card key={index} className="overflow-hidden glass-card neon-glow">

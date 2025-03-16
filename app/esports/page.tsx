@@ -259,7 +259,7 @@ export default function EsportsPage() {
           <div className="max-w-4xl mx-auto">
             <VideoPlayer
               src={featuredVideo.url}
-              poster="/game.jpg"
+              poster="/lol-logo.jpg"
               title={featuredVideo.title}
               isLive={featuredVideo.isLive}
             />
@@ -608,7 +608,7 @@ export default function EsportsPage() {
             <div className="relative">
               <div className="aspect-video bg-black rounded-lg overflow-hidden">
                 <Image
-                  src="/placeholder.svg?height=720&width=1280&text=Live%20Stream"
+                  src="/lol-logo.jpg?height=720&width=1280&text=Live%20Stream"
                   alt="Live Stream"
                   width={640}
                   height={360}

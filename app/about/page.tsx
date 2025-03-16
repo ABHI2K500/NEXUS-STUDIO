@@ -25,7 +25,7 @@ export default function AboutPage() {
 
         <div className="container relative z-10">
           <div className="max-w-3xl space-y-6">
-            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">About ABC Studios</h1>
+            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">About Nexus Studios</h1>
             <p className="text-xl text-text-200 max-w-2xl">
               We're a team of passionate creators, technologists, and strategists dedicated to transforming ideas into
               digital reality.
@@ -42,7 +42,7 @@ export default function AboutPage() {
               <h2 className="text-3xl font-bold mb-6">Our Story</h2>
               <div className="space-y-4 text-text-200">
                 <p>
-                  Founded in 2015, ABC Studios began as a small team of digital enthusiasts with a shared vision: to
+                  Founded in 2015, Nexus Studios began as a small team of digital enthusiasts with a shared vision: to
                   create meaningful digital experiences that connect brands with their audiences.
                 </p>
                 <p>
@@ -56,7 +56,7 @@ export default function AboutPage() {
                   objectives.
                 </p>
                 <p>
-                  Today, ABC Studios stands as a leader in the industry, known for our innovative approach, technical
+                  Today, Nexus Studios stands as a leader in the industry, known for our innovative approach, technical
                   expertise, and unwavering commitment to client success.
                 </p>
               </div>
@@ -83,7 +83,7 @@ export default function AboutPage() {
         <div className="container">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-3xl font-bold mb-4">Our Guiding Principles</h2>
-            <p className="text-text-200">The core beliefs and values that drive everything we do at ABC Studios.</p>
+            <p className="text-text-200">The core beliefs and values that drive everything we do at Nexus Studios.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -142,23 +142,26 @@ export default function AboutPage() {
               {
                 name: "Abhijith S",
                 role: "Founder & CEO",
-                bio: "With over 15 years of experience in digital media, Alex leads our team with vision and expertise.",
-              },
-              {
-                name: "Abhijith P",
-                role: "Creative Director",
-                bio: "Samantha brings creative concepts to life with her innovative approach to design and storytelling.",
+                bio: "With over 15 years of experience in digital media, Abhijith S leads our team with vision and expertise.",
+                src: "/s.jpg",
               },
               {
                 name: "Ananthakrishnan K V",
+                role: "Creative Director",
+                bio: "Ananthan brings creative concepts to life with her innovative approach to design and storytelling.",
+                src: "/pfp.jpg",
+              },
+              {
+                name: "Abhijith P",
                 role: "Technical Director",
-                bio: "David oversees all technical aspects of our productions, ensuring flawless execution.",
+                bio: "Abhijith P oversees all technical aspects of our productions, ensuring flawless execution.",
+                src: "/p.jpg",
               },
             ].map((member, index) => (
               <Card key={index} className="overflow-hidden">
                 <div className="aspect-square relative">
                   <Image
-                    src={`/placeholder.svg?height=400&width=400&text=${member.name}`}
+                    src={member.src || `/placeholder.svg?height=400&width=400&text=${member.name}`}
                     alt={member.name}
                     fill
                     className="object-cover"
@@ -191,28 +194,28 @@ export default function AboutPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <Image
-                src="/placeholder.svg?height=300&width=300&text=Team%201"
+                src="/alex.jpg?height=300&width=300&text=Team%201"
                 alt="Team"
-                width={300}
-                height={300}
+                width={270}
+                height={270}
                 className="rounded-lg"
               />
               <Image
-                src="/placeholder.svg?height=300&width=300&text=Team%202"
+                src="/niranjan.jpg?height=300&width=300&text=Team%202"
                 alt="Team"
-                width={300}
-                height={300}
+                width={270}
+                height={270}
                 className="rounded-lg"
               />
               <Image
-                src="/placeholder.svg?height=300&width=300&text=Team%203"
+                src="/nandhu.jpg?height=300&width=300&text=Team%203"
                 alt="Team"
-                width={300}
-                height={300}
+                width={270}
+                height={270}
                 className="rounded-lg"
               />
               <Image
-                src="/placeholder.svg?height=300&width=300&text=Team%204"
+                src="/sarju-s.jpg?height=300&width=300&text=Team%204"
                 alt="Team"
                 width={300}
                 height={300}
