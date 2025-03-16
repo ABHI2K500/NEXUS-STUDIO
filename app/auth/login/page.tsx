@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase"
@@ -42,18 +42,49 @@ const signupSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>
 type SignupFormValues = z.infer<typeof signupSchema>
 
+// Component that uses useSearchParams
+function SearchParamsWrapper({ children }: { children: (params: URLSearchParams | null) => React.ReactNode }) {
+  const searchParams = useSearchParams()
+  return <>{children(searchParams)}</>
+}
+
+// Custom hook to handle search params
+function useSearchParamsHandler(onParamsChange: (params: URLSearchParams | null) => void) {
+  return useCallback((params: URLSearchParams | null) => {
+    onParamsChange(params)
+    return null
+  }, [onParamsChange])
+}
+
 export default function AuthPage() {
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState("login")
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirectTo = searchParams?.get("redirectTo") || "/dashboard"
-  const isAdminParam = searchParams?.get("isAdmin") === "true"
-  const errorParam = searchParams?.get("error")
+  const isAdminParamRef = useRef(false)
+  const redirectToRef = useRef("/dashboard")
+  
+  // Initialize the form first
+  const loginForm = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      isAdmin: false,
+    },
+  })
+  
+  const signupForm = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  })
   
   // Handle error messages from URL parameters
-  useEffect(() => {
+  const handleErrorParam = (errorParam: string | null) => {
     if (errorParam) {
       let errorMessage = "An error occurred during authentication"
       
@@ -71,32 +102,28 @@ export default function AuthPage() {
       
       setError(errorMessage)
     }
-  }, [errorParam])
+  }
   
-  const loginForm = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      isAdmin: isAdminParam,
-    },
-  })
-  
-  // Update isAdmin checkbox when URL parameter changes
-  useEffect(() => {
+  // Handle search params changes
+  const handleSearchParamsChange = useCallback((params: URLSearchParams | null) => {
+    const redirectTo = params?.get("redirectTo") || "/dashboard"
+    const isAdminParam = params?.get("isAdmin") === "true"
+    const errorParam = params?.get("error") || null
+    
+    // Update the ref values
+    isAdminParamRef.current = isAdminParam
+    redirectToRef.current = redirectTo
+    
+    // Handle error parameter
+    handleErrorParam(errorParam)
+    
+    // Update isAdmin in the form
     if (isAdminParam) {
       loginForm.setValue("isAdmin", true)
     }
-  }, [isAdminParam, loginForm])
+  }, [loginForm])
   
-  const signupForm = useForm<SignupFormValues>({
-    resolver: zodResolver(signupSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      confirmPassword: "",
-    },
-  })
+  const searchParamsHandler = useSearchParamsHandler(handleSearchParamsChange)
   
   // Check if user is already logged in
   useEffect(() => {
@@ -176,7 +203,8 @@ export default function AuthPage() {
         if (profile?.role === "admin") {
           router.push("/admin/dashboard")
         } else {
-          router.push(redirectTo)
+          // Use the redirectTo from SearchParamsWrapper
+          router.push(redirectToRef.current)
         }
       } else {
         throw new Error("Login failed. Please try again.")
@@ -239,185 +267,207 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/50 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
-            {isAdminParam ? "Admin Login" : "Welcome to Nexus"}
-          </CardTitle>
-          <CardDescription className="text-center">
-            {isAdminParam 
-              ? "Enter your credentials to access the admin dashboard" 
-              : "Sign in to your account or create a new one"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {error && (
-            <Alert variant="destructive" className="mb-6">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          
-          <Tabs defaultValue="login" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="signup" disabled={isAdminParam}>Sign Up</TabsTrigger>
-            </TabsList>
+      <Suspense fallback={
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold text-center">
+              Welcome to Nexus
+            </CardTitle>
+            <CardDescription className="text-center">
+              Loading...
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      }>
+        <SearchParamsWrapper>
+          {(searchParams) => {
+            // Process search params and return null to avoid rendering issues
+            searchParamsHandler(searchParams)
             
-            <TabsContent value="login">
-              <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
-                  <FormField
-                    control={loginForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="your.email@example.com" 
-                            type="email" 
-                            disabled={loading} 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={loginForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="••••••••" 
-                            type="password" 
-                            disabled={loading} 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  {!isAdminParam && (
-                    <FormField
-                      control={loginForm.control}
-                      name="isAdmin"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                              disabled={loading}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>Admin Login</FormLabel>
-                            <p className="text-sm text-muted-foreground">
-                              Check this if you are logging in as an administrator
-                            </p>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
+            return (
+              <Card className="w-full max-w-md">
+                <CardHeader className="space-y-1">
+                  <CardTitle className="text-2xl font-bold text-center">
+                    {isAdminParamRef.current ? "Admin Login" : "Welcome to Nexus"}
+                  </CardTitle>
+                  <CardDescription className="text-center">
+                    {isAdminParamRef.current 
+                      ? "Enter your credentials to access the admin dashboard" 
+                      : "Sign in to your account or create a new one"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {error && (
+                    <Alert variant="destructive" className="mb-6">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
                   )}
                   
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={loading}
-                  >
-                    {loading ? "Logging in..." : isAdminParam ? "Admin Login" : "Login"}
-                  </Button>
-                </form>
-              </Form>
-            </TabsContent>
-            
-            <TabsContent value="signup">
-              <Form {...signupForm}>
-                <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
-                  <FormField
-                    control={signupForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="your.email@example.com" 
-                            type="email" 
-                            disabled={loading} 
-                            {...field} 
+                  <Tabs defaultValue="login" value={activeTab} onValueChange={setActiveTab}>
+                    <TabsList className="grid w-full grid-cols-2 mb-6">
+                      <TabsTrigger value="login">Login</TabsTrigger>
+                      <TabsTrigger value="signup" disabled={isAdminParamRef.current}>Sign Up</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="login">
+                      <Form {...loginForm}>
+                        <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
+                          <FormField
+                            control={loginForm.control}
+                            name="email"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Email</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="your.email@example.com" 
+                                    type="email" 
+                                    disabled={loading} 
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
                           />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={signupForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="••••••••" 
-                            type="password" 
-                            disabled={loading} 
-                            {...field} 
+                          
+                          <FormField
+                            control={loginForm.control}
+                            name="password"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Password</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="••••••••" 
+                                    type="password" 
+                                    disabled={loading} 
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
                           />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={signupForm.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Confirm Password</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="••••••••" 
-                            type="password" 
-                            disabled={loading} 
-                            {...field} 
+                          
+                          {!isAdminParamRef.current && (
+                            <FormField
+                              control={loginForm.control}
+                              name="isAdmin"
+                              render={({ field }) => (
+                                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                      disabled={loading}
+                                    />
+                                  </FormControl>
+                                  <div className="space-y-1 leading-none">
+                                    <FormLabel>Admin Login</FormLabel>
+                                    <p className="text-sm text-muted-foreground">
+                                      Check this if you are logging in as an administrator
+                                    </p>
+                                  </div>
+                                </FormItem>
+                              )}
+                            />
+                          )}
+                          
+                          <Button
+                            type="submit"
+                            className="w-full"
+                            disabled={loading}
+                          >
+                            {loading ? "Logging in..." : isAdminParamRef.current ? "Admin Login" : "Login"}
+                          </Button>
+                        </form>
+                      </Form>
+                    </TabsContent>
+                    
+                    <TabsContent value="signup">
+                      <Form {...signupForm}>
+                        <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
+                          <FormField
+                            control={signupForm.control}
+                            name="email"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Email</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="your.email@example.com" 
+                                    type="email" 
+                                    disabled={loading} 
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
                           />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="text-sm text-muted-foreground">
-                    <p>Note: New accounts are created with regular user permissions.</p>
-                    <p>Admin access requires approval from existing administrators.</p>
-                  </div>
-                  
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={loading}
-                  >
-                    {loading ? "Creating account..." : "Create Account"}
-                  </Button>
-                </form>
-              </Form>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+                          
+                          <FormField
+                            control={signupForm.control}
+                            name="password"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Password</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="••••••••" 
+                                    type="password" 
+                                    disabled={loading} 
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={signupForm.control}
+                            name="confirmPassword"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Confirm Password</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="••••••••" 
+                                    type="password" 
+                                    disabled={loading} 
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <div className="text-sm text-muted-foreground">
+                            <p>Note: New accounts are created with regular user permissions.</p>
+                            <p>Admin access requires approval from existing administrators.</p>
+                          </div>
+                          
+                          <Button
+                            type="submit"
+                            className="w-full"
+                            disabled={loading}
+                          >
+                            {loading ? "Creating account..." : "Create Account"}
+                          </Button>
+                        </form>
+                      </Form>
+                    </TabsContent>
+                  </Tabs>
+                </CardContent>
+              </Card>
+            )
+          }}
+        </SearchParamsWrapper>
+      </Suspense>
     </div>
   )
 } 

@@ -3,7 +3,7 @@ import Link from "next/link"
 import { Calendar, Clock, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { BlogSearch } from "./blog-search"
 
 export const metadata = {
   title: "Blog - ABC Studios",
@@ -224,10 +224,7 @@ export default function BlogPage() {
             <div>
               <div className="bg-card rounded-lg p-6 mb-8">
                 <h3 className="text-lg font-bold mb-4">Search</h3>
-                <div className="flex">
-                  <Input placeholder="Search articles..." className="flex-1" />
-                  <Button className="ml-2">Search</Button>
-                </div>
+                <BlogSearch />
               </div>
 
               <div className="bg-card rounded-lg p-6 mb-8">
@@ -279,8 +276,7 @@ export default function BlogPage() {
                 <p className="text-text-200 text-sm mb-4">
                   Stay updated with our latest articles and insights. Subscribe to our newsletter.
                 </p>
-                <Input placeholder="Your email address" className="mb-2" />
-                <Button className="w-full">Subscribe</Button>
+                <BlogSearch isNewsletter />
               </div>
             </div>
           </div>
