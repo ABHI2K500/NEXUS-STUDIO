@@ -1,167 +1,185 @@
-# Nexus Studio
+# Nexus Studio Website Documentation
 
-A modern website for Nexus Studio, featuring live streaming, media production, digital marketing, event management, and esports services.
+## Overview
+Nexus Studio is a modern, feature-rich website for a digital media and esports company. The platform showcases the company's services, live streaming capabilities, esports tournaments, and provides interactive features for user engagement.
 
-## Deploying to Vercel
+## Tech Stack
 
-### Prerequisites
+### Frontend
+- **Framework**: Next.js (React-based framework)
+- **Language**: TypeScript
+- **Styling**: 
+  - Tailwind CSS for utility-based styling
+  - CSS modules for component-specific styles
+- **Animation**: Framer Motion for smooth animations and transitions
+- **UI Components**: Custom UI components built with shadcn/ui system
 
-- A [Vercel](https://vercel.com) account
-- [Git](https://git-scm.com/) installed on your machine
-- Your project pushed to a Git repository (GitHub, GitLab, or Bitbucket)
+### Backend
+- **API Routes**: Next.js API routes for serverless functions
+- **Database**: Supabase (PostgreSQL-based)
+- **Authentication**: Supabase Auth
 
-### Deployment Steps
+### State Management
+- React Hooks (useState, useEffect, useRef)
+- Context API for global state (theme, language, notifications)
 
-1. **Push your code to a Git repository**
+### External Integrations
+- YouTube API for video embedding
+- Email service for newsletter subscriptions
 
-   Make sure your code is pushed to a Git repository on GitHub, GitLab, or Bitbucket.
+## Core Features
 
-2. **Import your project to Vercel**
+### 1. Multilingual Support
+- Language switching capability with support for English, Spanish, French, German, and Chinese
+- Context-based language provider for seamless translations
 
-   - Go to [Vercel Dashboard](https://vercel.com/dashboard)
-   - Click "Add New" > "Project"
-   - Select your Git repository
-   - Configure your project settings
+### 2. Theme System
+- Light/dark mode toggle with system preference detection
+- Theme-aware components that adapt to the selected theme
+- Smooth transitions between themes
 
-3. **Configure Environment Variables**
+### 3. Live Streaming
+- YouTube video embedding with live status indicator
+- Admin-configurable featured video that updates in real-time
+- Video update notifications across the site
 
-   Add the following environment variables in the Vercel dashboard:
+### 4. Esports Section
+- Live leaderboard with player rankings and statistics
+- Player profiles with detailed stats (wins, losses, win rate)
+- Admin dashboard for managing leaderboard data
 
-   - `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase URL
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anonymous key
-   - `GROQ_API_KEY`: Your Groq API key
-   - `NEXT_PUBLIC_GROQ_API_KEY`: Your public Groq API key
-   - SMTP settings if you're using the newsletter feature
+### 5. Admin Dashboard
+- Protected admin area with authentication
+- Content management capabilities:
+  - Email subscriber management
+  - Contact form submission viewing
+  - Newsletter sending functionality
+  - Featured video management
+  - Esports leaderboard management
 
-4. **Deploy**
+### 6. Interactive UI Elements
+- Animated gradient backgrounds
+- Parallax scrolling effects
+- Counter animations for statistics
+- Hover effects with mouse position tracking
+- Intersection observer for triggering animations when elements come into view
 
-   Click "Deploy" and Vercel will build and deploy your project.
+### 7. AI Chat Assistant
+- Floating chat interface for user inquiries
+- API-based chat functionality
+- Theme-aware chat UI
 
-5. **Assign a Custom Domain (Optional)**
+### 8. Forms and User Input
+- Newsletter subscription form
+- Contact form with validation
+- Admin forms for content management
 
-   - Go to your project settings in Vercel
-   - Navigate to "Domains"
-   - Add your custom domain
+### 9. Authentication System
+- User login/registration
+- Role-based access control (admin vs regular users)
+- Session management
 
-## Development
+## Page Structure
 
-### Getting Started
+### Homepage
+- Hero section with animated elements and statistics
+- Services overview with interactive cards
+- Esports leaderboard
+- Featured video stream
+- "Why Choose Us" section
+- Call to action and newsletter subscription
 
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-2. Run the development server:
-   ```bash
-   npm run dev
-   ```
-
-3. Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### Environment Variables
-
-Create a `.env.local` file in the root directory with the following variables:
-
-```
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-
-# SMTP Configuration for Newsletter
-SMTP_HOST=your_smtp_host
-SMTP_PORT=your_smtp_port
-SMTP_USER=your_smtp_username
-SMTP_PASSWORD=your_smtp_password
-SMTP_FROM=your_from_email
-
-# Groq API Configuration
-NEXT_PUBLIC_GROQ_API_KEY=your_public_groq_api_key
-GROQ_API_KEY=your_groq_api_key
-```
-
-## Features
-
-- Live streaming services
+### Services Pages
+- Detailed information about each service
+- Live streaming
 - Media production
 - Digital marketing
 - Event management
 - Esports services
-- AI-powered chat assistant
-- User authentication
-- Blog section
-- Portfolio showcase
-- Responsive design
+- Global reach
 
-## Admin Features Setup
+### Esports Page
+- Tournament information
+- Live leaderboard
+- Featured video stream
+- Team information
 
-### Prerequisites
-1. Create a Supabase project at [https://supabase.com](https://supabase.com)
-2. Set up an SMTP server for sending newsletters (e.g., SendGrid, Amazon SES)
-3. Get a Groq API key for the chatbot at [https://groq.com](https://groq.com)
+### Admin Dashboard
+- Subscriber management
+- Contact form submissions
+- Newsletter sending interface
+- Featured video management
+- Esports leaderboard management
 
-### Environment Variables
-Copy `.env.local.example` to `.env.local` and fill in the values:
+### Authentication Pages
+- Login
+- Registration
+- Password reset
+- Email verification
 
-```bash
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=your-project-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+## Technical Implementation Details
 
-# SMTP Configuration for Newsletter
-SMTP_HOST=smtp.example.com
-SMTP_PORT=587
-SMTP_USER=your-smtp-username
-SMTP_PASSWORD=your-smtp-password
-SMTP_FROM=noreply@yourdomain.com
+### Responsive Design
+- Mobile-first approach
+- Responsive grid layouts
+- Adaptive components that work across device sizes
+- Media queries for specific breakpoints
 
-# Groq API Configuration
-NEXT_PUBLIC_GROQ_API_KEY=your-groq-api-key
-```
+### Performance Optimization
+- Image optimization with Next.js Image component
+- Code splitting for reduced bundle size
+- Lazy loading of components
+- Memoization of expensive calculations
 
-### Database Setup
-1. Go to your Supabase project's SQL editor
-2. Copy the contents of `supabase/schema.sql`
-3. Run the SQL commands to create the necessary tables and policies
+### Accessibility
+- Semantic HTML structure
+- ARIA attributes for interactive elements
+- Keyboard navigation support
+- Screen reader compatibility
 
-### Creating an Admin User
-1. Create a new user through Supabase Authentication
-2. Use the SQL editor to update the user's role to admin:
-```sql
-UPDATE profiles
-SET role = 'admin'
-WHERE id = 'your-user-id';
-```
+### State Management
+- Local component state with useState
+- Global state with Context API
+- Side effects managed with useEffect
+- DOM references with useRef
 
-### Features
-- **Admin Login**: Secure authentication for admin users
-- **Email Management**: View and manage newsletter subscribers
-- **Newsletter**: Send newsletters to all subscribers
-- **Contact Form**: View and manage customer support inquiries
-- **Protected Routes**: Only admin users can access the dashboard
+### API Architecture
+- RESTful API endpoints
+- In-memory storage for development
+- Database integration for production
+- Cache control headers for real-time updates
 
-### Development
+### Animation System
+- Scroll-triggered animations
+- Hover effects
+- Loading state animations
+- Transition effects between states
 
-```bash
-# Install dependencies
-npm install
+## Development Workflow
 
-# Run development server
-npm run dev
+### Environment Setup
+- Next.js development server
+- TypeScript compilation
+- Tailwind CSS processing
+- ESLint for code quality
 
-# Build for production
-npm run build
+### Deployment
+- Vercel for hosting and serverless functions
+- Environment variables for configuration
+- Continuous integration/deployment
 
-# Start production server
-npm start
-```
+### Testing
+- Component testing
+- API endpoint testing
+- End-to-end testing
 
-### Admin Routes
-- `/admin` - Admin login page
-- `/admin/dashboard` - Admin dashboard with email subscribers and contact form submissions
+## Future Enhancements
+- Enhanced analytics dashboard
+- Live chat between users
+- Real-time notifications
+- Mobile application integration
+- Advanced search functionality
+- E-commerce capabilities for merchandise
 
-### Security
-- All admin routes are protected with authentication
-- Row Level Security (RLS) is enabled on all tables
-- Only admin users can access sensitive data
-- Secure email handling with environment variables 
+## Conclusion
+Nexus Studio represents a modern, feature-rich web application built with cutting-edge technologies. Its architecture emphasizes performance, user experience, and maintainability while providing a comprehensive set of features for both users and administrators.
